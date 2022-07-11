@@ -14,7 +14,7 @@ public class Main {
                 TimeUnit.SECONDS.sleep(1);
 
                 // Send received data from Sensor A to the http server
-                tcp_client.communicateWithCloud(rcv_A_data);
+                tcp_client.communicateWithCloud("POST" + rcv_A_data);
                 TimeUnit.SECONDS.sleep(1);
 
                 // get Sensor B Data from Adaptor
@@ -22,7 +22,7 @@ public class Main {
                 TimeUnit.SECONDS.sleep(1);
 
                 // Send received Sensor B Data to the http server
-                tcp_client.communicateWithCloud(rcv_B_data);
+                tcp_client.communicateWithCloud("POST" + rcv_B_data);
                 TimeUnit.SECONDS.sleep(1);
 
             } catch (Exception e) {

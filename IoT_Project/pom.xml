@@ -16,7 +16,6 @@
         <module>Coordinator</module>
         <module>MQTT_UDP_Adaptor</module>
         <module>Database</module>
-        <module>Database2</module>
     </modules>
 
     <properties>

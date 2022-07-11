@@ -12,16 +12,16 @@ public class ThriftServer {
     public final static int COORDINATOR_PORT = Integer.parseInt(System.getenv("COORDINATOR_PORT"));
 
     //DB1
-    public static final String DATABASE_IP = System.getenv("DATABASE_IP");
-    public static final int DATABASE_PORT = Integer.parseInt(System.getenv("DATABASE_PORT"));
-    static Socket clientSocket = null;
-    static PrintStream os = null;
-    static DataInputStream is = null;
-    static BufferedReader inputLine = null;
+    public static final String DATABASE1_IP = System.getenv("DATABASE1_IP");
+    public static final int DATABASE1_PORT = Integer.parseInt(System.getenv("DATABASE_PORT"));
+    static Socket clientSocket1 = null;
+    static PrintStream os1 = null;
+    static DataInputStream is1 = null;
+    static BufferedReader inputLine1 = null;
 
     // DB2
     public static String DATABASE2_IP = System.getenv("DATABASE2_IP");
-    public static int DATABASE2_PORT = Integer.parseInt(System.getenv("DATABASE2_PORT"));
+    public static final int DATABASE2_PORT = Integer.parseInt(System.getenv("DATABASE_PORT"));
     static Socket clientSocket2 = null;
     static PrintStream os2 = null;
     static DataInputStream is2 = null;
@@ -33,10 +33,10 @@ public class ThriftServer {
         private static int entry_id = 0;
 
         private void establishConnectionWithDB1() throws IOException {
-            clientSocket = new Socket(DATABASE_IP, DATABASE_PORT);
-            inputLine = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            os = new PrintStream(clientSocket.getOutputStream());
-            is = new DataInputStream(clientSocket.getInputStream());
+            clientSocket1 = new Socket(DATABASE1_IP, DATABASE1_PORT);
+            inputLine1 = new BufferedReader(new InputStreamReader(clientSocket1.getInputStream()));
+            os1 = new PrintStream(clientSocket1.getOutputStream());
+            is1 = new DataInputStream(clientSocket1.getInputStream());
         }
 
         private void establishConnectionWithDB2() throws IOException {
@@ -47,11 +47,11 @@ public class ThriftServer {
         }
 
         private void closeStreamsAndSockets () throws IOException {
-            os.close();
+            os1.close();
             os2.close();
-            is.close();
+            is1.close();
             is2.close();
-            clientSocket.close();
+            clientSocket1.close();
             clientSocket2.close();
         }
 
@@ -79,21 +79,21 @@ public class ThriftServer {
             }
 
             try {
-                os.println(queryString);
+                os1.println(queryString);
                 os2.println(queryString);
 
-                String vote = inputLine.readLine();
+                String vote = inputLine1.readLine();
                 String vote2 = inputLine2.readLine();
 
                 if (vote.equals("ABORT") || vote2.equals("ABORT")) {
                     System.out.println("Redundant PK, Aborted.");
-                    os.println("ABORTED");
+                    os1.println("ABORTED");
                     os2.println("ABORTED");
                     closeStreamsAndSockets();
 
                 } else if (vote.equals("COMMIT") && vote2.equals("COMMIT")) {
                     System.out.println("No Redundant PK, Committed.");
-                    os.println("COMMITTED");
+                    os1.println("COMMITTED");
                     os2.println("COMMITTED");
                     queryCreated = true;
                 }
@@ -118,10 +118,10 @@ public class ThriftServer {
             }
             try {
                 // send query to DB1 & DB2
-                os.println(queryString);
+                os1.println(queryString);
                 os2.println(queryString);
                 // receive query from DB1 & DB2
-                String entry = inputLine.readLine();
+                String entry = inputLine1.readLine();
                 String entry2 = inputLine2.readLine();
                 // print received data
                 System.out.println("Read Entry from DB1: " + entry);
@@ -150,20 +150,20 @@ public class ThriftServer {
             }
 
             try {
-                os.println(queryString);
+                os1.println(queryString);
                 os2.println(queryString);
 
-                String vote = inputLine.readLine();
+                String vote = inputLine1.readLine();
                 String vote2 = inputLine2.readLine();
 
                 if (vote.equals("ABORT") || vote2.equals("ABORT")) {
                     System.out.println("Can not make update. Aborted.");
-                    os.println("ABORTED");
+                    os1.println("ABORTED");
                     os2.println("ABORTED");
                     closeStreamsAndSockets();
                 } else if (vote.equals("COMMIT") && vote2.equals("COMMIT")) {
                     System.out.println("Committed updated Entry.");
-                    os.println("COMMITTED");
+                    os1.println("COMMITTED");
                     os2.println("COMMITTED");
                 }
             } catch (IOException e) {
@@ -185,20 +185,20 @@ public class ThriftServer {
             }
 
             try {
-                os.println(queryString);
+                os1.println(queryString);
                 os2.println(queryString);
 
-                String vote = inputLine.readLine();
+                String vote = inputLine1.readLine();
                 String vote2 = inputLine2.readLine();
 
                 if (vote.equals("ABORT") || vote2.equals("ABORT")) {
                     System.out.println("Can not delete Entry. Aborted.");
-                    os.println("ABORTED");
+                    os1.println("ABORTED");
                     os2.println("ABORTED");
                     closeStreamsAndSockets();
                 } else if (vote.equals("COMMIT") && vote2.equals("COMMIT")) {
                     System.out.println("Committed to delete Entry.");
-                    os.println("COMMITTED");
+                    os1.println("COMMITTED");
                     os2.println("COMMITTED");
                 }
             } catch (IOException e) {

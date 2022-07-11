@@ -1,9 +1,9 @@
 
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
+
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -51,24 +51,23 @@ public class TcpServer {
 
                 String received_msg = in_socket.readLine();
 
-                String checkWord = "GET";
-
-                if (received_msg.contains(checkWord)) { //GET
+                if (received_msg.contains("GET")) {
+                    // GET REQUEST
                     System.out.println("GET Request Received: " + received_msg);
                     getRequestArray.add(received_msg);
                     System.out.println(getRequestArray);
                     printData(thrift_client);
                     getRequestArray.clear();
 
-                }else{  //POST
-                    System.out.println("[Received from IoT-Gateway] : " + received_msg);
+                } else if (received_msg.contains("POST")) {
+                    received_msg = received_msg.replaceAll("POST","");
+                    //POST REQUEST
+                    System.out.println("POST Request from IoT-Gateway : " + received_msg);
                     out_socket.println("Confirmation - Cloud got the message : " + received_msg);
                     AllSensorData.add(received_msg);
 
                     //// Thrift Client ////
-
                     System.out.println("[Thrift Client] sending value " + received_msg);
-
                     String[] parts = received_msg.split("_");
                     SensorData sd = new SensorData();
                     sd.setSensorType(parts[0]);
@@ -86,6 +85,10 @@ public class TcpServer {
 
                     System.out.println("[Confirmation from Cloud] : " + confirmation);
                     Thread.sleep(1000);
+                }
+
+                else {
+                    throw new IllegalArgumentException("Unknown TCP Request!");
                 }
 
             } catch (IOException | TException ex) {
@@ -116,13 +119,8 @@ public class TcpServer {
                 for (String t : AllSensorData) {
                     out_socket.println(newHtmlLine + t);
                 }
-
                 out_socket.println(HTML_END);
-                //out_socket.flush();
             }
-            /*else{
-                //printBadRequestResponse();
-            }*/
         }
     }
 }

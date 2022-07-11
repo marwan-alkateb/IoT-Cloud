@@ -13,8 +13,10 @@
         <module name="Sensor_B" />
         <module name="MQTT_UDP_Adaptor" />
         <module name="Coordinator" />
-        <module name="Database2" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Database2" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>

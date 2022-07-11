@@ -3,39 +3,30 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
 
-    public static void main(String[] args) throws MqttException, InterruptedException, UnknownHostException {
+    public static void main(String[] args) throws MqttException, InterruptedException {
 
-        //int SENSOR_ADAPTOR_PORT = Integer.parseInt(System.getenv("SENSOR_ADAPTOR_PORT"));
-        //InetAddress ADAPTOR_IP = InetAddress.getByName(System.getenv("SENSOR_B_IP"));
+        String BROKER_IP = System.getenv("BROKER_IP");
+        String BROKER_PORT = System.getenv("BROKER_PORT");
 
-        System.out.println("== START PUBLISHER ==");
-
-        MqttClient client = new MqttClient("tcp://172.20.0.9:1884", MqttClient.generateClientId());
+        MqttClient mqttClient = new MqttClient("tcp://" + BROKER_IP + ":" + BROKER_PORT, MqttClient.generateClientId());
 
         //options
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setAutomaticReconnect(true); //Auto Reconnect
+        options.setAutomaticReconnect(true);    //Auto Reconnect
         options.setCleanSession(true);
         options.setConnectionTimeout(5);
-
-        //connect
-        client.connect(options);
-
-        while(true){
+        // set up connection
+        mqttClient.connect(options);
+        // Sensor B as Publisher sends every 1 second the current data to broker
+        while (true) {
             MqttMessage message = new MqttMessage();
-
             message.setQos(1);
-            //message.setRetained(true);
-
             message.setPayload(Sensors.getCurrentValues().getBytes());
-            client.publish("SensorB_Data", message);
+            mqttClient.publish("SensorB_Data", message);
             TimeUnit.MILLISECONDS.sleep(1000);
         }
     }
