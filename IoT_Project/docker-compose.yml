@@ -1,0 +1,208 @@
+version: "3.8"
+
+services:
+
+  #Sensor A
+  sensor_a:
+    container_name: "sensor_a"
+    build:
+      context: ./Sensor_A
+      dockerfile: dockerfile
+    image: verteilte_systeme/sensor_a
+    environment:
+      SENSOR_NAME: "SENSOR A"
+      SENSOR_TYPE: "A"
+      SENSOR_A_PORT: "1011"
+      IOTGATEWAY_IP: "172.20.0.2"
+      IOTGATEWAY_PORT: "50000"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.4
+
+  #Sensor B
+  sensor_b:
+    container_name: "sensor_b"
+    build:
+      context: ./Sensor_B
+      dockerfile: dockerfile
+    image: verteilte_systeme/sensor_b
+    environment:
+      SENSOR_NAME: "SENSOR B"
+      SENSOR_TYPE: "B"
+      #SENSOR_ADAPTOR_PORT: "1883"
+      ADAPTOR_IP: "172.20.0.7"
+      IOTGATEWAY_PORT: "50000"
+      SENSOR_B_IP : "172.20.0.8"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.8
+    depends_on:
+      - mosquitto
+
+
+  # Adaptor
+  mqtt_udp_adaptor:
+    container_name: "mqtt_udp_adaptor"
+    build:
+      context: ./MQTT_UDP_Adaptor
+      dockerfile: dockerfile
+    image: verteilte_systeme/mqtt_udp_adaptor
+    environment:
+      ADAPTOR_PORT: "1110"
+      #SENSOR_ADAPTOR_PORT: "1883"
+      ADAPTOR_IP: "172.20.0.7"
+      IOTGATEWAY_PORT: "50000"
+      SENSOR_B_IP : "172.20.0.8"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.7
+    depends_on:
+      - mosquitto
+      - sensor_b
+
+
+  # IoTGateway
+  iotgateway:
+    container_name: "iotgateway"
+    build:
+      context: ./IoT_Gateway
+      dockerfile: dockerfile
+    image: verteilte_systeme/iot_gateway:latest
+    environment:
+      SENSOR_A_PORT: "1011"
+      SENSOR_A_IP: "172.20.0.4"
+      CLOUD_PORT: "1234"
+      CLOUD_SERVER_IP: "172.20.0.5"
+      ADAPTOR_PORT: "1110"
+      ADAPTOR_IP: "172.20.0.7"
+    ports:
+      - "50000:50000"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.2
+    depends_on:
+      - sensor_a
+      - cloud
+      - mqtt_udp_adaptor
+
+
+  # Cloud
+  cloud:
+    container_name: "cloud"
+    build:
+      context: ./Cloud
+      dockerfile: dockerfile
+    image: verteilte_systeme/cloud:latest
+    environment:
+      CLOUD_PORT: "1234"
+      CLOUD_SERVER_IP: "172.20.0.5"
+      COORDINATOR_PORT: "9090"
+      COORDINATOR_IP: "172.20.0.6"
+    ports:
+      - "1234:1234"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.5
+    depends_on:
+      - coordinator
+
+
+  # Coordinator
+  coordinator:
+    container_name: "coordinator"
+    build:
+      context: ./Coordinator
+      dockerfile: dockerfile
+    image: verteilte_systeme/coordinator
+    environment:
+      COORDINATOR_PORT: "9090"
+      COORDINATOR_IP: "172.20.0.6"
+      DATABASE_PORT: "9091"
+      DATABASE_IP: "172.20.0.11"
+      DATABASE2_PORT: "9092"
+      DATABASE2_IP: "172.20.0.12"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.6
+    depends_on:
+      - database1
+      - database2
+
+  # Database1
+  database1:
+    container_name: "datebase1"
+    build:
+      context: ./Database
+      dockerfile: dockerfile
+    image: verteilte_systeme/database
+    environment:
+      DATABASE_PORT: "9091"
+      DATABASE_IP: "172.20.0.11"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.11
+
+  # Database2
+  database2:
+    container_name: "datebase2"
+    build:
+      context: ./Database2
+      dockerfile: dockerfile
+    image: verteilte_systeme/database2
+    environment:
+      DATABASE2_PORT: "9092"
+      DATABASE2_IP: "172.20.0.12"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.12
+
+
+  # Management Tool
+  portainer:
+    container_name: "portainer"
+    image: portainer/portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      - "81:9000"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.10
+
+
+  # MQTT Broker
+  mosquitto:
+    container_name: mqtt
+    image: eclipse-mosquitto
+    restart: always
+    volumes:
+      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1884:1884"
+    networks:
+      verteilte_systeme:
+        ipv4_address: 172.20.0.9
+
+
+#Volumes
+volumes:
+  portainer_data:
+
+
+#Netzwerk
+networks:
+  verteilte_systeme:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.20.0.0/16"
+
+      ########## REMARKS ##########
+      ### NOTE 1 ###
+      # In a network there are three IPs which are normally reserved for specific tasks
+      # 0 is used as network address
+      # 1 is used as Gateway
+      # 255 is used as Broadcast Address
+
+      ### NOTE 2 ###

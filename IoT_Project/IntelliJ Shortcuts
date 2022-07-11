@@ -1,0 +1,12 @@
+IntelliJ IDEA
+
+Ctrl + Alt + L :    Reformat code
+Alt + Enter :       show fix suggestions
+F2 :                jump to next failure in code
+Alt + 1 :           show project window
+Ctrl + E :          show recent opened Files
+Ctrl + B :          go to declaration
+Ctrl (twice) :      Run Anything window
+Ctrl + / :          Add/Remove Line Comment
+Ctrl + Shift + / :  Add/Remove Block Comment
+Shift (twice) :     Find Action / Functions / Classes / Files / shortcuts / ...

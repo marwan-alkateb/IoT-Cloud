@@ -1,0 +1,16 @@
+FROM maven:3.8.5-jdk-11 AS BUILD
+#Kopiere alle Dateien
+COPY pom.xml /tmp/
+COPY src /tmp/src/
+WORKDIR /tmp/
+
+#Build .jar file
+RUN mvn package
+
+#Finaler Container
+FROM openjdk:11
+
+COPY --from=BUILD /tmp/target/Cloud-*-with-dependencies.jar /app/Cloud.jar
+WORKDIR /app
+
+CMD ["java", "-jar", "/app/Cloud.jar"]
